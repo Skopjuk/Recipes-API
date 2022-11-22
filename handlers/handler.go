@@ -50,6 +50,10 @@ func (handler *RecipesHandler) ListRecipesHandler(c *gin.Context) {
 	c.JSON(http.StatusOK, recipes)
 }
 
+func (handler *RecipesHandler) SearchRecipesHandler(c *gin.Context) {
+
+}
+
 //swagger:operation POST /recipes recipes newRecipe
 //Adds new recipe
 //---
@@ -127,4 +131,40 @@ func (handler *RecipesHandler) UpdateRecipeHandler(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, gin.H{"message": "Recipe has been updated"})
+}
+
+//swagger:operation DELETE /recipes/{id} recipes deleteRecipe
+//Delete an existing recipe
+//---
+//parameters:
+// - name: id
+//   in: path
+//   description: ID of the recipe
+//   required: true
+//   type: string
+//produces:
+// - application/json
+//responses:
+//	'200':
+//		description: Successful operation
+//	'400':
+//		description: Invalid input
+//	'404':
+//		description: Invalid recipe ID
+
+func (handler *RecipesHandler) DeleteRecipeHandler(c *gin.Context) {
+	id := c.Param("id")
+	objectId, _ := primitive.ObjectIDFromHex(id)
+	delRes, err := handler.collection.DeleteOne(handler.ctx, bson.M{
+		"_id": objectId,
+	})
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	if delRes.DeletedCount > 0 {
+		c.JSON(http.StatusOK, gin.H{"message": "Recipe has been deleted"})
+	} else {
+		c.JSON(http.StatusOK, gin.H{"message": "Recipe with this id doesn't exist"})
+	}
 }
