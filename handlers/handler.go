@@ -50,10 +50,6 @@ func (handler *RecipesHandler) ListRecipesHandler(c *gin.Context) {
 	c.JSON(http.StatusOK, recipes)
 }
 
-func (handler *RecipesHandler) SearchRecipesHandler(c *gin.Context) {
-
-}
-
 //swagger:operation POST /recipes recipes newRecipe
 //Adds new recipe
 //---
@@ -167,4 +163,23 @@ func (handler *RecipesHandler) DeleteRecipeHandler(c *gin.Context) {
 	} else {
 		c.JSON(http.StatusOK, gin.H{"message": "Recipe with this id doesn't exist"})
 	}
+}
+
+func (handler *RecipesHandler) SearchRecipesHandler(c *gin.Context) {
+	id := c.Param("id")
+	objectId, _ := primitive.ObjectIDFromHex(id)
+	res := handler.collection.FindOne(handler.ctx, bson.M{
+		"_id": objectId,
+	})
+
+	var result models.Recipe
+
+	err := res.Decode(&result)
+
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, result)
 }
