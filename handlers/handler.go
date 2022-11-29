@@ -165,6 +165,14 @@ func (handler *RecipesHandler) DeleteRecipeHandler(c *gin.Context) {
 	}
 }
 
+//swagger:operation GET /recipes/search recipes searchRecipes
+//Search recipe by id
+//---
+//produces:
+//- application/json
+//responses:
+//  '200':
+//		description: Successful operation
 func (handler *RecipesHandler) SearchRecipesHandler(c *gin.Context) {
 	id := c.Param("id")
 	objectId, _ := primitive.ObjectIDFromHex(id)
