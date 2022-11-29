@@ -31,6 +31,7 @@ var ctx context.Context
 var err error
 var client *mongo.Client
 var recipesHandler *handlers.RecipesHandler
+var authHandler *handlers.AuthHandler
 
 func init() {
 	// -- на данный момент просто необходимый параметр для использования подключения к монго, потом может быть чем-то заполнен
@@ -50,41 +51,21 @@ func init() {
 	log.Println("Connected to MongoDB")
 	collection := client.Database(os.Getenv("MONGO_DATABASE")).Collection("recipes")
 	recipesHandler = handlers.NewRecipeHandlers(ctx, collection)
-
+	authHandler = &handlers.AuthHandler{}
 }
 
-//swagger:operation GET /recipes/search recipes searchRecipes
-//Search recipe by tag
-//---
-//produces:
-//- application/json
-//responses:
-//  '200':
-//		description: Successful operation
-/*
-func SearchRecipesHandler(c *gin.Context) {
-	tag := c.Query("tag")
-	listOfRecipes := make([]Recipe, 0)
-	for i := 0; i < len(recipes); i++ {
-		found := false
-		for _, t := range recipes[i].Tags {
-			if strings.EqualFold(t, tag) {
-				found = true
-			}
-		}
-		if found {
-			listOfRecipes = append(listOfRecipes, recipes[i])
-		}
-	}
-	c.JSON(http.StatusOK, listOfRecipes)
-}
-*/
 func main() {
 	router := gin.Default()
-	router.POST("/recipes", recipesHandler.NewRecipeHandler)
-	router.GET("/recipes", recipesHandler.ListRecipesHandler)
-	router.PUT("/recipes/:id", recipesHandler.UpdateRecipeHandler)
-	router.DELETE("/recipes/:id", recipesHandler.DeleteRecipeHandler)
-	router.GET("/recipes/search/:id", recipesHandler.SearchRecipesHandler)
+	router.POST("/signin", authHandler.SighInHandler)
+	router.POST("/refresh", authHandler.RefreshHandler)
+	authorized := router.Group("/")
+	authorized.Use(handlers.AuthMiddleware())
+	{
+		authorized.POST("/recipes", recipesHandler.NewRecipeHandler)
+		authorized.GET("/recipes", recipesHandler.ListRecipesHandler)
+		authorized.PUT("/recipes/:id", recipesHandler.UpdateRecipeHandler)
+		authorized.DELETE("/recipes/:id", recipesHandler.DeleteRecipeHandler)
+		authorized.GET("/recipes/search/:id", recipesHandler.SearchRecipesHandler)
+	}
 	router.Run()
 }
