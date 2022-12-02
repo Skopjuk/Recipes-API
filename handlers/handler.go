@@ -74,8 +74,7 @@ func (handler *RecipesHandler) NewRecipeHandler(c *gin.Context) {
 	_, err := handler.collection.InsertOne(handler.ctx, recipe)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError,
-			gin.H{"error": "Error while inserting " +
-				"a new recipe"})
+			gin.H{"error": "Error while inserting a new recipe"})
 		return
 	}
 

@@ -51,13 +51,15 @@ func init() {
 	log.Println("Connected to MongoDB")
 	collection := client.Database(os.Getenv("MONGO_DATABASE")).Collection("recipes")
 	recipesHandler = handlers.NewRecipeHandlers(ctx, collection)
-	authHandler = &handlers.AuthHandler{}
+	collectionUsers := client.Database(os.Getenv("MONGO_DATABASE")).Collection("users")
+	authHandler = handlers.NewAuthHandler(ctx, collectionUsers)
 }
 
 func main() {
 	router := gin.Default()
-	router.POST("/signin", authHandler.SighInHandler)
+	router.POST("/signin", authHandler.SignInHandler)
 	router.POST("/refresh", authHandler.RefreshHandler)
+	router.POST("/signup", authHandler.SignUpHandler)
 	authorized := router.Group("/")
 	authorized.Use(handlers.AuthMiddleware())
 	{
