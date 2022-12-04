@@ -18,8 +18,10 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"github.com/Skopjuk/Recipes-API/handlers"
 	"github.com/gin-gonic/gin"
+	"github.com/go-redis/redis/v8"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"go.mongodb.org/mongo-driver/mongo/readpref"
@@ -48,11 +50,21 @@ func init() {
 	if err = client.Ping(context.TODO(), readpref.Primary()); err != nil {
 		log.Fatal(err)
 	}
+
+	redisClient := redis.NewClient(&redis.Options{
+		Addr:     "localhost:6379",
+		Password: "",
+		DB:       0,
+	})
+
 	log.Println("Connected to MongoDB")
 	collection := client.Database(os.Getenv("MONGO_DATABASE")).Collection("recipes")
-	recipesHandler = handlers.NewRecipeHandlers(ctx, collection)
+	recipesHandler = handlers.NewRecipeHandlers(ctx, collection, redisClient)
 	collectionUsers := client.Database(os.Getenv("MONGO_DATABASE")).Collection("users")
 	authHandler = handlers.NewAuthHandler(ctx, collectionUsers)
+
+	status := redisClient.Ping(ctx)
+	fmt.Println(status)
 }
 
 func main() {
